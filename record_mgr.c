@@ -155,7 +155,7 @@ RC insertRecord (RM_TableData *rel, Record *record)
 		fHandle->curPagePos=i;
 		rc = pinPage(bm,h,fHandle->curPagePos);
 		char* data=h->data;
-		// loop for size we got 
+		// loop for rec_size we got 
 		for(j=0;j<page_header_size;j++)
 		{
 			if(data[j]=='0')
@@ -202,7 +202,10 @@ RC insertRecord (RM_TableData *rel, Record *record)
 		record->id.slot=slot;
 		rc = updateRecord(rel,record);
 	}
+	if (rc == RC_OK)
 	return rc;
+	else
+	return RC_RM_INSERT_FAILED;
 }
 
 RC deleteRecord (RM_TableData *rel, RID id)
@@ -229,7 +232,10 @@ RC deleteRecord (RM_TableData *rel, RID id)
 	rc = markDirty(bm, h);
 	rc = unpinPage(bm, h);
 	// return 
+	if (rc == RC_OK)
 	return rc;
+	else
+	return RC_RM_DELETE_FAILED;
 }
 
 RC updateRecord (RM_TableData *rel, Record *record)
@@ -252,7 +258,7 @@ RC updateRecord (RM_TableData *rel, Record *record)
 	rc = pinPage(bm,h,page);
 	data=h->data;
 	
-	// get record size
+	// get record rec_size
 	rec_size=getRecordSize(rel->schema);
 	memcpy(data+slot,"1",1);
 	page_header_size = Kar_get_PageHeader_Size(rel);
@@ -271,7 +277,10 @@ RC updateRecord (RM_TableData *rel, Record *record)
 	rc = unpinPage(bm, h);
 	
 	// return 
+	if (rc == RC_OK)
 	return rc;
+	else
+	return RC_RM_UPDATE_FAILED;
 }
 
 RC getRecord (RM_TableData *rel, RID id, Record *record)
@@ -302,10 +311,13 @@ RC getRecord (RM_TableData *rel, RID id, Record *record)
 	memcpy(rec_data,data,rec_size);
 	data = data - move_on;
 	// Just getting so no need to write it back
-	rc = markDirty(bm, h);
+	//rc = markDirty(bm, h);
 	rc = unpinPage(bm, h);
 	// return
-	return rc ;
+	if (rc == RC_OK)
+	return rc;
+	else
+	return RC_RM_GET_FAILED;
 }
 
 // Scanning functions
@@ -409,18 +421,20 @@ RC closeScan (RM_ScanHandle *scan)
 	return rc;
 }
 
-// dealing with schemas
+// 
 int getRecordSize (Schema *schema)
 {
-	int size=0,i;
+	int rec_size=0,i=0;
+	// based on no of attributes 
 	for(i=0;i<schema->numAttr;i++)
 	{
+		// Decide on type length and add that to schema
 		if(schema->typeLength[i]!=0)
-			size+=schema->typeLength[i];
+			rec_size = rec_size + schema->typeLength[i];
 		else
-			size+=sizeof(DT_INT);
+			rec_size= rec_size+sizeof(DT_INT);
 	}
-	return size;
+	return rec_size;
 }
 
 Schema *createSchema (int numAttr, char **attrNames, DataType *dataTypes, int *typeLength, int keySize, int *keys)
@@ -443,7 +457,7 @@ Schema *createSchema (int numAttr, char **attrNames, DataType *dataTypes, int *t
 
 RC freeSchema(Schema* schema)
 {
-	RC rc;
+	RC rc = RC_OK;
 	int numAttrs=schema->numAttr,i;
 	// First free all attributes 
 	for(i=0;i<numAttrs;i++)
@@ -533,7 +547,7 @@ RC getAttr (Record *record, Schema *schema, int attrNum, Value **value)
 	else
 	attribute_Size=schema->typeLength[i];
 	
-	// allocate intermediate result based on attribute size
+	// allocate intermediate result based on attribute rec_size
 	build=(char*)malloc(attribute_Size*sizeof(char)+1);
 	
 	// copy intermediate result
@@ -567,6 +581,7 @@ RC getAttr (Record *record, Schema *schema, int attrNum, Value **value)
 	// return
 	return rc;
 }
+
 
 RC setAttr (Record *record, Schema *schema, int attrNum, Value *value)
 {
@@ -620,18 +635,17 @@ RC setAttr (Record *record, Schema *schema, int attrNum, Value *value)
 			break;
 	}
 
-	//chunk the wanted attr values and copy to build
-	
+	// Chunk the wanted attr values and copy to build
 	if (schema->typeLength[i]==0)
 	attribute_Size=sizeof(DT_INT);
 	else
 	attribute_Size=schema->typeLength[i];
 	
-	// Memcopy
+	// copy the data of record to intermediate result
 	memcpy(record->data,build,attribute_Size);
 	record->data = record->data - move_on;
 	
-	// free intermediate result
+	// free intermediate result 
 	free(build);
 	build=NULL;
 	
