@@ -237,18 +237,15 @@ This function is used to get the size of a record in a given schema.
 	-----------------
 We have included additional test cases for executing the following functions.
 
-->
-->
-->  
+-> For Multiple random scans 
+
 	Error Checks
 	-----------------
 	
 We have included the following additional error checks
 
-->  
-->
-->
-->
+->  RC_RM_GET_FAILED 219
+->  RC_RM_SCAN_FAILED 220
 
 *****************************************************************
 
@@ -262,12 +259,18 @@ Version 	   Date 	   Description
 version 1.0    11/16/2014  	All functions were commented.
 
 version 1.1    11/24/2014	Syntax errors were rectified.
-		
-version 1.2    12/03/2014	Rectified logical errors.
-  
-version 1.3    12/05/2014   Added readme for code run and 						understanding //final
-  
 
+version 1.2    11/27/2014   Evaluated test_expr
+
+version 1.3    11/29/2014   Rectified freeing faults
+		
+version 1.4    12/03/2014	Rectified logical errors.
+
+version 1.4.1  12/04/2014   Rectified logical error in next 
+  
+version 1.5    12/05/2014   Added readme for code run and 						
+  
+version 1.6    12/06/2014   Final with updated readme.txt
 
 
 ----------------------------------------------------------------------------------------------------------------------------------
