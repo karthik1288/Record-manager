@@ -10,7 +10,7 @@
 #include "buffer_mgr.c"
 #include "assumptions.h"
 
-// Design is that I store the table manager structure pointer always to Mgmtdata of the structure provided and use it as I did in Storage_mgr.c 
+// Design is that we store the table manager structure pointer always to Mgmtdata of the structure provided and we use it as we did in Storage_mgr.c 
 // Really nothing to implement in init and shutdown
 RC initRecordManager (void *mgmtData)
 {
@@ -24,7 +24,7 @@ RC shutdownRecordManager ()
 	return RC_OK;
 }
 
-// When am creating a table am storing page cover to disk and referring whenever needed
+// When creating a table we are storing page cover to disk and referring whenever needed
 RC createTable (char *name, Schema *schema)
 {
 	RC rc;
@@ -85,9 +85,9 @@ RC openTable (RM_TableData *rel, char *name)
 	tab_mgr->bm=bm;
 	
 
-	// reading first block thru buffer mgr
+	// reading first block through buffer mgr
 	rc = pinPage(bm,h,i);
-	// Deserialize data and unpin page
+	// De-serialize data and unpin page
 	Kar_DeSerialize_TableInfo(rel,h->data);
 	rc = unpinPage(bm, h);
 	return rc;
@@ -197,7 +197,7 @@ RC insertRecord (RM_TableData *rel, Record *record)
 		}
 		rc = markDirty(bm, h);
 		rc = unpinPage(bm,h);
-		// Update record after pinning it
+		// Update the record after pinning it
 		record->id.page=page;
 		record->id.slot=slot;
 		rc = updateRecord(rel,record);
@@ -351,7 +351,7 @@ RC next (RM_ScanHandle *scan, Record *record)
 	BM_BufferPool *bm = tab_mgr->bm;
 	BM_PageHandle *h = tab_mgr->h;
 	
-	// file handle aslo req here
+	// file handle also required here
 	BP_Manager * poolMgr = (BP_Manager *)bm->mgmtData;
 	SM_FileHandle* fHandle=&poolMgr->fHandle;
 	
@@ -408,7 +408,7 @@ RC next (RM_ScanHandle *scan, Record *record)
 RC closeScan (RM_ScanHandle *scan)
 {
 	RC rc;
-	// Scanning manager init
+	// Scanning manager initialization
 	Scanning_Manager_DS* smd=(Scanning_Manager_DS*)scan->mgmtData;
 	Expr* cond=smd->cond;
 	
@@ -425,7 +425,7 @@ RC closeScan (RM_ScanHandle *scan)
 int getRecordSize (Schema *schema)
 {
 	int rec_size=0,i=0;
-	// based on no of attributes 
+	// based on number of attributes 
 	for(i=0;i<schema->numAttr;i++)
 	{
 		// Decide on type length and add that to schema
@@ -442,7 +442,7 @@ Schema *createSchema (int numAttr, char **attrNames, DataType *dataTypes, int *t
 	// Allocate new schema
 	Schema* schema=(Schema*)malloc(sizeof(Schema));
 	
-	// Assign all attributes of schema to passed
+	// Assign all attributes of the schema passed
 	schema->keySize=keySize;
 	schema->typeLength=typeLength;
 	schema->attrNames=attrNames;
